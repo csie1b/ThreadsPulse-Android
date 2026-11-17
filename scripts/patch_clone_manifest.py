@@ -3,27 +3,24 @@ import os
 import struct
 import zipfile
 
-AUTHORITY_OR_PERMISSION_PATTERNS = [
-    "com.instagram.barcelona",
-    "com.instagram.barcelona.permission.SYSTEM_ONLY",
-    "com.instagram.barcelona.permission.CROSS_PROCESS_BROADCAST_MANAGER",
-    "com.instagram.barcelona.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
-    "com.instagram.barcelona.securefileprovider",
-    "com.instagram.barcelona.fileprovider",
-    "com.instagram.barcelona.androidx-startup",
-    "com.instagram.barcelona.liteprovider.BarcelonaLiteContentProvider",
-    "com.instagram.barcelona.liteprovider.usdid.UsdidValuesProvider",
-    "com.instagram.barcelona.provider.AccessLibraryContentProvider",
-    "com.instagram.barcelona.hatch.chat.files",
-    "com.instagram.barcelona.hatch.files",
-    "com.instagram.barcelona.provider.phoneid",
-]
+RENAME_MAP = {
+    "com.instagram.barcelona": "com.instagram.barcelonp",
+    "com.instagram.barcelona.permission.SYSTEM_ONLY": "com.instagram.barcelonp.permission.SYSTEM_ONLY",
+    "com.instagram.barcelona.permission.CROSS_PROCESS_BROADCAST_MANAGER": "com.instagram.barcelonp.permission.CROSS_PROCESS_BROADCAST_MANAGER",
+    "com.instagram.barcelona.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION": "com.instagram.barcelonp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+    "com.instagram.barcelona.securefileprovider": "com.instagram.barcelonp.securefileprovider",
+    "com.instagram.barcelona.fileprovider": "com.instagram.barcelonp.fileprovider",
+    "com.instagram.barcelona.androidx-startup": "com.instagram.barcelonp.androidx-startup",
+    "com.instagram.barcelona.liteprovider.BarcelonaLiteContentProvider": "com.instagram.barcelonp.liteprovider.BarcelonaLiteContentProvider",
+    "com.instagram.barcelona.liteprovider.usdid.UsdidValuesProvider": "com.instagram.barcelonp.liteprovider.usdid.UsdidValuesProvider",
+    "com.instagram.barcelona.provider.AccessLibraryContentProvider": "com.instagram.barcelonp.provider.AccessLibraryContentProvider",
+    "com.instagram.barcelona.hatch.chat.files": "com.instagram.barcelonp.hatch.chat.files",
+    "com.instagram.barcelona.hatch.files": "com.instagram.barcelonp.hatch.files",
+    "com.instagram.barcelona.provider.phoneid": "com.instagram.barcelonp.provider.phoneid",
+    ".permission.RECEIVE_ADM_MESSAGE": ".permissiop.RECEIVE_ADM_MESSAGE",
+}
 
-def should_rename_string(s: str) -> bool:
-    return s in AUTHORITY_OR_PERMISSION_PATTERNS
-
-def patch_manifest_bytes(raw_data: bytes, old_prefix="com.instagram.barcelona", new_prefix="com.instagram.barcelonp") -> bytes:
-    assert len(old_prefix) == len(new_prefix), f"Prefix lengths must match: {len(old_prefix)} != {len(new_prefix)}"
+def patch_manifest_bytes(raw_data: bytes) -> bytes:
     data = bytearray(raw_data)
     
     if len(data) < 36:
@@ -61,8 +58,8 @@ def patch_manifest_bytes(raw_data: bytes, old_prefix="com.instagram.barcelona", 
                 p_cur += 1
             s_bytes = bytes(data[p_cur:p_cur + b_len])
             s = s_bytes.decode("utf-8", errors="replace")
-            if should_rename_string(s):
-                new_s = s.replace(old_prefix, new_prefix)
+            if s in RENAME_MAP:
+                new_s = RENAME_MAP[s]
                 new_bytes = new_s.encode("utf-8")
                 if len(new_bytes) == len(s_bytes):
                     data[p_cur:p_cur + b_len] = new_bytes
@@ -73,8 +70,8 @@ def patch_manifest_bytes(raw_data: bytes, old_prefix="com.instagram.barcelona", 
             u_len = struct.unpack("<H", data[p:p+2])[0]
             s_bytes = bytes(data[p+2:p+2 + u_len*2])
             s = s_bytes.decode("utf-16le", errors="replace")
-            if should_rename_string(s):
-                new_s = s.replace(old_prefix, new_prefix)
+            if s in RENAME_MAP:
+                new_s = RENAME_MAP[s]
                 new_bytes = new_s.encode("utf-16le")
                 if len(new_bytes) == len(s_bytes):
                     data[p+2:p+2 + u_len*2] = new_bytes
