@@ -72,9 +72,17 @@ jobs:
           cp workspace/patched/*-aligned-debugSigned.apk output/Threads_Pulse_Patched.apk 2>/dev/null || cp workspace/patched/*.apk output/Threads_Pulse_Patched.apk
           ls -lh output/
 
-      - name: Upload Patched Threads APK
+      - name: Upload Patched Threads APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Threads_Pulse_Patched_APK
           path: output/Threads_Pulse_Patched.apk
           if-no-files-found: error
+
+      - name: Attach Patched APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.27.0
+          files: output/Threads_Pulse_Patched.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
