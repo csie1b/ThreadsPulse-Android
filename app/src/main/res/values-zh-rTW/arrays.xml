@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="video_quality_entries">
+        <item>最高 (DASH / 1080p)</item>
+        <item>720p</item>
+        <item>每次詢問</item>
+    </string-array>
+</resources>

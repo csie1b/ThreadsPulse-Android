@@ -1,0 +1,73 @@
+name: Build ThreadsPulse APK
+
+on:
+  push:
+    branches: [main, master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease assembleDebug --stacktrace
+
+      - name: Prepare APK Artifacts
+        id: prepare_artifacts
+        run: |
+          mkdir -p output
+          cp app/build/outputs/apk/release/app-release-unsigned.apk output/ThreadsPulse-Release.apk 2>/dev/null || cp app/build/outputs/apk/release/*.apk output/ThreadsPulse-Release.apk
+          cp app/build/outputs/apk/debug/app-debug.apk output/ThreadsPulse-Debug.apk
+          ls -lh output/
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThreadsPulse-Release-APK
+          path: output/ThreadsPulse-Release.apk
+          if-no-files-found: error
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThreadsPulse-Debug-APK
+          path: output/ThreadsPulse-Debug.apk
+          if-no-files-found: error
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            output/ThreadsPulse-Release.apk
+            output/ThreadsPulse-Debug.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

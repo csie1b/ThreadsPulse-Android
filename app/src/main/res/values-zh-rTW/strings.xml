@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ThreadsPulse</string>
+    <string name="xposed_description">Threads（com.instagram.barcelona）的 Android 增強模組</string>
+
+    <!-- Status -->
+    <string name="status_title">ThreadsPulse</string>
+    <string name="status_version">版本 %s</string>
+    <string name="status_module_active">LSPosed / Xposed 模組已啟用</string>
+    <string name="status_module_inactive">模組尚未啟用（請在 LSPosed 中勾選 Threads，或使用 LSPatch 注入）</string>
+    <string name="status_lspatch_tip">免 Root 用戶可使用 LSPatch 工具將本模組注入至 Threads 官方 APK 中安裝使用。</string>
+
+    <!-- Categories -->
+    <string name="cat_ads_privacy">廣告與隱私</string>
+    <string name="cat_media">媒體下載</string>
+    <string name="cat_player">播放器</string>
+    <string name="cat_feed">首頁動態</string>
+    <string name="cat_suggestions">隱藏項目：推薦內容</string>
+    <string name="cat_direct_messages">私訊</string>
+    <string name="cat_interface">介面與互動</string>
+    <string name="cat_backup">備份與還原</string>
+    <string name="cat_theme">主題配色</string>
+
+    <!-- 廣告與隱私 -->
+    <string name="pref_block_ads_title">去除廣告</string>
+    <string name="pref_block_ads_desc">隱藏動態裡的贊助串文</string>
+    <string name="pref_block_screenshot_title">停用截圖偵測</string>
+    <string name="pref_block_screenshot_desc">截圖或錄影時，Threads 不會偵測到</string>
+    <string name="pref_block_analytics_title">阻擋分析回傳</string>
+    <string name="pref_block_analytics_desc">不回傳瀏覽、停留時間與點擊等使用紀錄</string>
+    <string name="pref_strip_tracking_title">移除網址追蹤碼</string>
+    <string name="pref_strip_tracking_desc">複製、分享或開啟連結時，自動移除 xmt、igshid、utm_* 等追蹤參數並解開跳轉</string>
+
+    <!-- 媒體下載 -->
+    <string name="pref_show_download_btn_title">下載按鈕</string>
+    <string name="pref_show_download_btn_desc">在串文右上角選單或操作列顯示下載全部圖片與影片</string>
+    <string name="pref_original_image_title">下載原始尺寸圖片</string>
+    <string name="pref_original_image_desc">取得最高解析度圖片並儲存至相簿</string>
+    <string name="pref_original_avatar_title">下載原始尺寸大頭貼</string>
+    <string name="pref_original_avatar_desc">在個人檔案長按大頭貼或檢視時儲存原始解析度圖片</string>
+    <string name="pref_parallel_download_title">同時下載多個檔案</string>
+    <string name="pref_parallel_download_desc">下載整則串文時，最多同時下載 4 個檔案</string>
+    <string name="pref_save_to_album_title">儲存至「Threads」相簿</string>
+    <string name="pref_save_to_album_desc">下載的圖片與影片將同步分類至「Threads」相簿</string>
+    <string name="pref_video_quality_title">影片畫質</string>
+    <string name="pref_video_quality_desc">選擇預設下載畫質（最高／720p／每次詢問）</string>
+
+    <!-- 播放器 -->
+    <string name="pref_no_autoplay_title">停用自動播放</string>
+    <string name="pref_no_autoplay_desc">瀏覽動態時，影片不會自動播放，點選後才會開始播放</string>
+    <string name="pref_play_speed_title">預設播放速度</string>
+    <string name="pref_play_speed_desc">影片播放速度（1x／1.25x／1.5x／2x）</string>
+
+    <!-- 首頁動態 -->
+    <string name="pref_keep_feed_title">保留動態位置</string>
+    <string name="pref_keep_feed_desc">從背景返回時，首頁不重新整理、不跳回頂端</string>
+    <string name="pref_no_pull_refresh_title">停用下拉重新整理</string>
+    <string name="pref_no_pull_refresh_desc">在首頁頂端下拉時，不會重新整理也不會回彈</string>
+    <string name="pref_tab_no_scroll_top_title">點首頁標籤時：不捲回頂端</string>
+    <string name="pref_tab_no_scroll_top_desc">點選首頁標籤時維持目前位置，不跳回頂端</string>
+    <string name="pref_tab_no_refresh_title">點首頁標籤時：不重新整理</string>
+    <string name="pref_tab_no_refresh_desc">位於首頁頂端時點選首頁標籤，不會重新整理或載入新串文</string>
+
+    <!-- 推薦內容 -->
+    <string name="pref_hide_feed_suggest_title">隱藏推薦帳號</string>
+    <string name="pref_hide_feed_suggest_desc">隱藏動態與個人檔案頁面的「為你推薦」</string>
+    <string name="pref_hide_follow_suggest_title">隱藏追蹤建議</string>
+    <string name="pref_hide_follow_suggest_desc">隱藏搜尋頁面的追蹤建議與建議對象</string>
+    <string name="pref_hide_post_feedback_title">隱藏串文興趣詢問</string>
+    <string name="pref_hide_post_feedback_desc">不再詢問你對串文有沒有興趣</string>
+
+    <!-- 私訊 -->
+    <string name="pref_no_seen_title">不顯示看過</string>
+    <string name="pref_no_seen_desc">查看私訊時不會通知對方（已讀隱身）</string>
+    <string name="pref_no_typing_title">不顯示輸入中</string>
+    <string name="pref_no_typing_desc">輸入訊息時，對方不會看到輸入提示「…」</string>
+    <string name="pref_seen_on_reply_title">回覆後顯示看過</string>
+    <string name="pref_seen_on_reply_desc">回覆訊息後，對方畫面才會顯示「看過」</string>
+    <string name="pref_keep_unsent_title">防止訊息收回</string>
+    <string name="pref_keep_unsent_desc">對方收回訊息時，訊息會保留在聊天室並標示「已收回」</string>
+
+    <!-- 介面與互動 -->
+    <string name="pref_confirm_like_title">按讚確認</string>
+    <string name="pref_confirm_like_desc">點愛心時會先顯示確認提示，收回時不會詢問</string>
+    <string name="pref_copy_profile_title">複製個人檔案資訊</string>
+    <string name="pref_copy_profile_desc">在個人檔案長按姓名、用戶名稱、個人簡介或大頭貼即可複製</string>
+    <string name="pref_external_browser_title">使用外部瀏覽器開啟連結</string>
+    <string name="pref_external_browser_desc">串文與簡介中的連結改以系統預設瀏覽器開啟</string>
+    <string name="pref_home_long_press_title">長按首頁標籤開啟設定</string>
+    <string name="pref_home_long_press_desc">長按底部的首頁標籤時，開啟 ThreadsPulse 設定</string>
+    <string name="pref_debug_toast_title">除錯提示</string>
+    <string name="pref_debug_toast_desc">各項掛鉤運作時在畫面顯示除錯 Toast 提示</string>
+
+    <!-- 備份 -->
+    <string name="export_settings">匯出設定（JSON）</string>
+    <string name="import_settings">匯入設定（JSON）</string>
+    <string name="reset_settings">重設所有設定</string>
+    <string name="export_success">設定已成功匯出至剪貼簿與儲存空間</string>
+    <string name="import_success">已成功匯入設定（共 %d 項）</string>
+    <string name="reset_confirm">確定要將所有設定恢復成預設值嗎？</string>
+
+    <!-- 下載器工具 -->
+    <string name="tab_settings">設定</string>
+    <string name="tab_downloader">串文下載器</string>
+    <string name="downloader_input_hint">在此貼上 Threads 串文網址...</string>
+    <string name="downloader_btn_paste">貼上</string>
+    <string name="downloader_btn_fetch">解析媒體</string>
+    <string name="downloader_download_all">下載全部 (%d)</string>
+    <string name="downloader_fetching">正在解析 Threads 串文媒體...</string>
+    <string name="downloader_error">解析失敗：%s</string>
+    <string name="downloader_success">媒體檔案已成功儲存至相簿！</string>
+    <string name="downloader_downloading">正在下載 %d / %d 個項目...</string>
+
+    <string name="action_cancel">取消</string>
+    <string name="action_ok">好</string>
+    <string name="action_confirm">確認</string>
+</resources>

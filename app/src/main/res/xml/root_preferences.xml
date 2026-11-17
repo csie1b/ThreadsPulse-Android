@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:title="@string/cat_theme"
+        app:iconSpaceReserved="false">
+        <ListPreference
+            app:key="tp_theme"
+            app:title="@string/cat_theme"
+            app:entries="@array/theme_entries"
+            app:entryValues="@array/theme_values"
+            app:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_ads_privacy"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            app:key="tp_block_ads"
+            app:title="@string/pref_block_ads_title"
+            app:summary="@string/pref_block_ads_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_block_screenshot_detect"
+            app:title="@string/pref_block_screenshot_title"
+            app:summary="@string/pref_block_screenshot_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_block_analytics"
+            app:title="@string/pref_block_analytics_title"
+            app:summary="@string/pref_block_analytics_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_strip_tracking"
+            app:title="@string/pref_strip_tracking_title"
+            app:summary="@string/pref_strip_tracking_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_media"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            app:key="tp_show_download_btn"
+            app:title="@string/pref_show_download_btn_title"
+            app:summary="@string/pref_show_download_btn_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_original_image"
+            app:title="@string/pref_original_image_title"
+            app:summary="@string/pref_original_image_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_original_avatar"
+            app:title="@string/pref_original_avatar_title"
+            app:summary="@string/pref_original_avatar_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_parallel_download"
+            app:title="@string/pref_parallel_download_title"
+            app:summary="@string/pref_parallel_download_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_save_to_album"
+            app:title="@string/pref_save_to_album_title"
+            app:summary="@string/pref_save_to_album_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            app:key="tp_video_quality"
+            app:title="@string/pref_video_quality_title"
+            app:summary="@string/pref_video_quality_desc"
+            app:entries="@array/video_quality_entries"
+            app:entryValues="@array/video_quality_values"
+            app:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_player"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            app:key="tp_no_autoplay"
+            app:title="@string/pref_no_autoplay_title"
+            app:summary="@string/pref_no_autoplay_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            app:key="tp_play_speed"
+            app:title="@string/pref_play_speed_title"
+            app:summary="@string/pref_play_speed_desc"
+            app:entries="@array/play_speed_entries"
+            app:entryValues="@array/play_speed_values"
+            app:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_feed"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            app:key="tp_keep_feed"
+            app:title="@string/pref_keep_feed_title"
+            app:summary="@string/pref_keep_feed_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_no_pull_refresh"
+            app:title="@string/pref_no_pull_refresh_title"
+            app:summary="@string/pref_no_pull_refresh_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_tab_no_scroll_top"
+            app:title="@string/pref_tab_no_scroll_top_title"
+            app:summary="@string/pref_tab_no_scroll_top_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_tab_no_refresh"
+            app:title="@string/pref_tab_no_refresh_title"
+            app:summary="@string/pref_tab_no_refresh_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_suggestions"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            app:key="tp_hide_feed_suggest"
+            app:title="@string/pref_hide_feed_suggest_title"
+            app:summary="@string/pref_hide_feed_suggest_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_hide_follow_suggest"
+            app:title="@string/pref_hide_follow_suggest_title"
+            app:summary="@string/pref_hide_follow_suggest_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_hide_post_feedback"
+            app:title="@string/pref_hide_post_feedback_title"
+            app:summary="@string/pref_hide_post_feedback_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_direct_messages"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            app:key="tp_no_seen"
+            app:title="@string/pref_no_seen_title"
+            app:summary="@string/pref_no_seen_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_no_typing"
+            app:title="@string/pref_no_typing_title"
+            app:summary="@string/pref_no_typing_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_seen_on_reply"
+            app:title="@string/pref_seen_on_reply_title"
+            app:summary="@string/pref_seen_on_reply_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_keep_unsent"
+            app:title="@string/pref_keep_unsent_title"
+            app:summary="@string/pref_keep_unsent_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_interface"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            app:key="tp_confirm_like"
+            app:title="@string/pref_confirm_like_title"
+            app:summary="@string/pref_confirm_like_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_copy_profile"
+            app:title="@string/pref_copy_profile_title"
+            app:summary="@string/pref_copy_profile_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_external_browser"
+            app:title="@string/pref_external_browser_title"
+            app:summary="@string/pref_external_browser_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_home_long_press"
+            app:title="@string/pref_home_long_press_title"
+            app:summary="@string/pref_home_long_press_desc"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            app:key="tp_debug_toast"
+            app:title="@string/pref_debug_toast_title"
+            app:summary="@string/pref_debug_toast_desc"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="@string/cat_backup"
+        app:iconSpaceReserved="false">
+        <Preference
+            app:key="pref_export_json"
+            app:title="@string/export_settings"
+            app:iconSpaceReserved="false" />
+        <Preference
+            app:key="pref_import_json"
+            app:title="@string/import_settings"
+            app:iconSpaceReserved="false" />
+        <Preference
+            app:key="pref_reset_all"
+            app:title="@string/reset_settings"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

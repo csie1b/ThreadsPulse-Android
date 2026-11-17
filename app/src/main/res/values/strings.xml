@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ThreadsPulse</string>
+    <string name="xposed_description">Pulse enhancement module for Threads (com.instagram.barcelona)</string>
+    
+    <!-- Status -->
+    <string name="status_title">ThreadsPulse</string>
+    <string name="status_version">Version %s</string>
+    <string name="status_module_active">LSPosed / Xposed Module Active</string>
+    <string name="status_module_inactive">Module Not Active (Enable in LSPosed or use LSPatch)</string>
+    <string name="status_lspatch_tip">Non-root users can patch the Threads APK using LSPatch with this module embedded.</string>
+
+    <!-- Categories -->
+    <string name="cat_ads_privacy">Ads &amp; Privacy</string>
+    <string name="cat_media">Media Download</string>
+    <string name="cat_player">Media Player</string>
+    <string name="cat_feed">Home Feed</string>
+    <string name="cat_suggestions">Suggestions &amp; Recommendations</string>
+    <string name="cat_direct_messages">Direct Messages</string>
+    <string name="cat_interface">Interface &amp; Interaction</string>
+    <string name="cat_backup">Backup &amp; Restore</string>
+    <string name="cat_theme">Theme</string>
+
+    <!-- Ads & Privacy -->
+    <string name="pref_block_ads_title">Block Ads</string>
+    <string name="pref_block_ads_desc">Hide sponsored posts and promotions in the feed</string>
+    <string name="pref_block_screenshot_title">Disable Screenshot Detection</string>
+    <string name="pref_block_screenshot_desc">Threads will not detect screenshots or screen recording</string>
+    <string name="pref_block_analytics_title">Block Analytics &amp; Telemetry</string>
+    <string name="pref_block_analytics_desc">Do not send view time, clicks, and usage telemetry</string>
+    <string name="pref_strip_tracking_title">Strip URL Tracking Parameters</string>
+    <string name="pref_strip_tracking_desc">Automatically clean xmt, igshid, utm_* and unwrap l.threads.com redirects</string>
+
+    <!-- Media Download -->
+    <string name="pref_show_download_btn_title">Download Button</string>
+    <string name="pref_show_download_btn_desc">Show download button in post actions to save images and videos</string>
+    <string name="pref_original_image_title">Original Image Resolution</string>
+    <string name="pref_original_image_desc">Download photos in the highest original web resolution</string>
+    <string name="pref_original_avatar_title">Original Avatar Quality</string>
+    <string name="pref_original_avatar_desc">Save full resolution profile pictures</string>
+    <string name="pref_parallel_download_title">Parallel Downloads</string>
+    <string name="pref_parallel_download_desc">Download multiple media files simultaneously (up to 4)</string>
+    <string name="pref_save_to_album_title">Save to Threads Album</string>
+    <string name="pref_save_to_album_desc">Save media into a dedicated Threads album in the gallery</string>
+    <string name="pref_video_quality_title">Video Quality</string>
+    <string name="pref_video_quality_desc">Select preferred video download quality</string>
+
+    <!-- Player -->
+    <string name="pref_no_autoplay_title">Disable Autoplay</string>
+    <string name="pref_no_autoplay_desc">Videos will not play automatically while browsing</string>
+    <string name="pref_play_speed_title">Default Playback Speed</string>
+    <string name="pref_play_speed_desc">Preferred speed for video playback</string>
+
+    <!-- Feed -->
+    <string name="pref_keep_feed_title">Retain Feed Position</string>
+    <string name="pref_keep_feed_desc">Prevent feed from refreshing or jumping to top when returning from background</string>
+    <string name="pref_no_pull_refresh_title">Disable Pull to Refresh</string>
+    <string name="pref_no_pull_refresh_desc">Prevent accidental refreshing on pull-down at top of feed</string>
+    <string name="pref_tab_no_scroll_top_title">Tab Tap: Do Not Scroll to Top</string>
+    <string name="pref_tab_no_scroll_top_desc">Maintain scroll position when tapping the Home tab</string>
+    <string name="pref_tab_no_refresh_title">Tab Tap: Do Not Refresh</string>
+    <string name="pref_tab_no_refresh_desc">Prevent refreshing new posts when tapping the Home tab at top</string>
+
+    <!-- Suggestions -->
+    <string name="pref_hide_feed_suggest_title">Hide Suggested Accounts</string>
+    <string name="pref_hide_feed_suggest_desc">Hide \"Suggested for you\" in feed and profile</string>
+    <string name="pref_hide_follow_suggest_title">Hide Follow Suggestions</string>
+    <string name="pref_hide_follow_suggest_desc">Hide suggestions in search and explore</string>
+    <string name="pref_hide_post_feedback_title">Hide Post Feedback Prompts</string>
+    <string name="pref_hide_post_feedback_desc">Do not show \"Are you interested in this post?\" prompts</string>
+
+    <!-- Direct Messages -->
+    <string name="pref_no_seen_title">Ghost Reading (No Seen)</string>
+    <string name="pref_no_seen_desc">Do not send read receipts when viewing messages</string>
+    <string name="pref_no_typing_title">Hide Typing Indicator</string>
+    <string name="pref_no_typing_desc">Others will not see when you are typing</string>
+    <string name="pref_seen_on_reply_title">Mark Seen on Reply</string>
+    <string name="pref_seen_on_reply_desc">Only mark messages as read once you send a reply</string>
+    <string name="pref_keep_unsent_title">Prevent Message Unsend</string>
+    <string name="pref_keep_unsent_desc">Keep unsent messages labeled as deleted</string>
+
+    <!-- Interface & Interaction -->
+    <string name="pref_confirm_like_title">Confirm Like</string>
+    <string name="pref_confirm_like_desc">Show confirmation dialog before liking a post</string>
+    <string name="pref_copy_profile_title">Copy Profile Info</string>
+    <string name="pref_copy_profile_desc">Long press bio or username to copy profile details</string>
+    <string name="pref_external_browser_title">Open Links in External Browser</string>
+    <string name="pref_external_browser_desc">Open external links in default browser instead of in-app WebView</string>
+    <string name="pref_home_long_press_title">Long Press Home Tab for Settings</string>
+    <string name="pref_home_long_press_desc">Long press the Home icon to open ThreadsPulse settings</string>
+    <string name="pref_debug_toast_title">Debug Notifications</string>
+    <string name="pref_debug_toast_desc">Display toast notifications when hooks fire</string>
+
+    <!-- Backup -->
+    <string name="export_settings">Export Settings (JSON)</string>
+    <string name="import_settings">Import Settings (JSON)</string>
+    <string name="reset_settings">Reset All Settings</string>
+    <string name="export_success">Settings exported successfully</string>
+    <string name="import_success">Settings imported successfully (%d keys)</string>
+    <string name="reset_confirm">Are you sure you want to reset all settings to default?</string>
+
+    <!-- Downloader Tool -->
+    <string name="tab_settings">Settings</string>
+    <string name="tab_downloader">Downloader</string>
+    <string name="downloader_input_hint">Paste Threads post URL here...</string>
+    <string name="downloader_btn_paste">Paste</string>
+    <string name="downloader_btn_fetch">Fetch Media</string>
+    <string name="downloader_download_all">Download All (%d)</string>
+    <string name="downloader_fetching">Fetching Threads post media...</string>
+    <string name="downloader_error">Failed to fetch media: %s</string>
+    <string name="downloader_success">Media saved to gallery</string>
+    <string name="downloader_downloading">Downloading %d / %d items...</string>
+
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_confirm">Confirm</string>
+</resources>

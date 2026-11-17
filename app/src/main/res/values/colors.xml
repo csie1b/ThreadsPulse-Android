@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="background_dark">#FF121212</color>
+    <color name="card_dark">#FF1E1E1E</color>
+    <color name="card_stroke_dark">#FF2C2C2C</color>
+    <color name="text_secondary">#FF8E8E93</color>
+
+    <!-- ThreadsPulse Themes -->
+    <!-- 0: Coral (珊瑚) -->
+    <color name="tp_coral_primary">#E8505B</color>
+    <color name="tp_coral_primary_variant">#C43D47</color>
+    <color name="tp_coral_secondary">#FFAAA6</color>
+
+    <!-- 1: Ocean (海洋) -->
+    <color name="tp_ocean_primary">#2980B9</color>
+    <color name="tp_ocean_primary_variant">#1F618D</color>
+    <color name="tp_ocean_secondary">#5DADE2</color>
+
+    <!-- 2: Mint (薄荷) -->
+    <color name="tp_mint_primary">#1ABC9C</color>
+    <color name="tp_mint_primary_variant">#16A085</color>
+    <color name="tp_mint_secondary">#48C9B0</color>
+
+    <!-- 3: Lavender (薰衣草) -->
+    <color name="tp_lavender_primary">#8E44AD</color>
+    <color name="tp_lavender_primary_variant">#7D3C98</color>
+    <color name="tp_lavender_secondary">#BB8FCE</color>
+
+    <!-- 4: Sakura (櫻花) -->
+    <color name="tp_sakura_primary">#E84393</color>
+    <color name="tp_sakura_primary_variant">#D63031</color>
+    <color name="tp_sakura_secondary">#FD79A8</color>
+
+    <!-- 5: Amber (琥珀) -->
+    <color name="tp_amber_primary">#F39C12</color>
+    <color name="tp_amber_primary_variant">#D68910</color>
+    <color name="tp_amber_secondary">#F8C471</color>
+</resources>

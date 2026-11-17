@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Scope for Xposed -->
+    <string-array name="xposed_scope">
+        <item>com.instagram.barcelona</item>
+    </string-array>
+
+    <string-array name="video_quality_entries">
+        <item>Highest (DASH / 1080p)</item>
+        <item>720p</item>
+        <item>Always Ask</item>
+    </string-array>
+    <string-array name="video_quality_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="play_speed_entries">
+        <item>1.0x</item>
+        <item>1.25x</item>
+        <item>1.5x</item>
+        <item>2.0x</item>
+    </string-array>
+    <string-array name="play_speed_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string-array name="theme_entries">
+        <item>Coral (珊瑚)</item>
+        <item>Ocean (海洋)</item>
+        <item>Mint (薄荷)</item>
+        <item>Lavender (薰衣草)</item>
+        <item>Sakura (櫻花)</item>
+        <item>Amber (琥珀)</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+</resources>
