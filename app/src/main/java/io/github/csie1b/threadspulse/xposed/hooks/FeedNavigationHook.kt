@@ -1,6 +1,5 @@
 package io.github.csie1b.threadspulse.xposed.hooks
 
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
