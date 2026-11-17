@@ -84,11 +84,11 @@ jobs:
 
       - name: Sign Patched APKs
         run: |
-          java -jar workspace/uber-apk-signer.jar --apks workspace/patched_std/ --allowResign --overwrite
-          java -jar workspace/uber-apk-signer.jar --apks workspace/patched_clone/ --allowResign --overwrite
+          java -jar workspace/uber-apk-signer.jar --apks workspace/patched_std/ --ks keystore/release.jks --ksAlias threadspulse --ksPass threadspulse --ksKeyPass threadspulse --allowResign --overwrite
+          java -jar workspace/uber-apk-signer.jar --apks workspace/patched_clone/ --ks keystore/release.jks --ksAlias threadspulse --ksPass threadspulse --ksKeyPass threadspulse --allowResign --overwrite
           mkdir -p output
-          cp workspace/patched_std/*-aligned-debugSigned.apk output/Threads_Pulse_Patched.apk 2>/dev/null || cp workspace/patched_std/*.apk output/Threads_Pulse_Patched.apk
-          cp workspace/patched_clone/*-aligned-debugSigned.apk output/Threads_Pulse_Clone_Coexist.apk 2>/dev/null || cp workspace/patched_clone/*.apk output/Threads_Pulse_Clone_Coexist.apk
+          cp workspace/patched_std/*-aligned-*.apk output/Threads_Pulse_Patched.apk 2>/dev/null || cp workspace/patched_std/*.apk output/Threads_Pulse_Patched.apk
+          cp workspace/patched_clone/*-aligned-*.apk output/Threads_Pulse_Clone_Coexist.apk 2>/dev/null || cp workspace/patched_clone/*.apk output/Threads_Pulse_Clone_Coexist.apk
           cp app/build/outputs/apk/release/*.apk output/ThreadsPulse-Release.apk 2>/dev/null || true
           ls -lh output/
 

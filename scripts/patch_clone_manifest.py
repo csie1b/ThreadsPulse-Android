@@ -3,16 +3,24 @@ import os
 import struct
 import zipfile
 
+AUTHORITY_OR_PERMISSION_PATTERNS = [
+    "com.instagram.barcelona",
+    "com.instagram.barcelona.permission.SYSTEM_ONLY",
+    "com.instagram.barcelona.permission.CROSS_PROCESS_BROADCAST_MANAGER",
+    "com.instagram.barcelona.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+    "com.instagram.barcelona.securefileprovider",
+    "com.instagram.barcelona.fileprovider",
+    "com.instagram.barcelona.androidx-startup",
+    "com.instagram.barcelona.liteprovider.BarcelonaLiteContentProvider",
+    "com.instagram.barcelona.liteprovider.usdid.UsdidValuesProvider",
+    "com.instagram.barcelona.provider.AccessLibraryContentProvider",
+    "com.instagram.barcelona.hatch.chat.files",
+    "com.instagram.barcelona.hatch.files",
+    "com.instagram.barcelona.provider.phoneid",
+]
+
 def should_rename_string(s: str) -> bool:
-    if not s.startswith("com.instagram.barcelona"):
-        return False
-    parts = s.split(".")
-    # If any segment after the prefix starts with an uppercase letter followed by lowercase (e.g. BarcelonaAppShell, BarcelonaActivity),
-    # it is a Java Class Name! Never rename class names because the bytecode in classes.dex has not been recompiled.
-    for p in parts[3:]:
-        if p and p[0].isupper() and not p.isupper():
-            return False
-    return True
+    return s in AUTHORITY_OR_PERMISSION_PATTERNS
 
 def patch_manifest_bytes(raw_data: bytes, old_prefix="com.instagram.barcelona", new_prefix="com.instagram.barcelonp") -> bytes:
     assert len(old_prefix) == len(new_prefix), f"Prefix lengths must match: {len(old_prefix)} != {len(new_prefix)}"
@@ -58,7 +66,7 @@ def patch_manifest_bytes(raw_data: bytes, old_prefix="com.instagram.barcelona", 
                 new_bytes = new_s.encode("utf-8")
                 if len(new_bytes) == len(s_bytes):
                     data[p_cur:p_cur + b_len] = new_bytes
-                    print(f"  [+] Renamed StringPool [{idx}]: {s} -> {new_s}")
+                    print(f"  [+] Renamed StringPool UTF-8 [{idx}]: {s} -> {new_s}")
                     renamed_count += 1
         else:
             # UTF-16LE
