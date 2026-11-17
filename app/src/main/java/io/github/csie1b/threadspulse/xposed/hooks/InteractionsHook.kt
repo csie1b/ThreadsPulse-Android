@@ -1,6 +1,5 @@
 package io.github.csie1b.threadspulse.xposed.hooks
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import de.robv.android.xposed.XC_MethodHook
@@ -15,7 +14,7 @@ object InteractionsHook {
     fun init(lpparam: LoadPackageParam) {
         val classLoader = lpparam.classLoader
 
-        // 1. External Browser hook: intercept in-app browser launches
+        // 1. External Browser hook: intercept in-app browser launches safely in onResume
         try {
             val inAppBrowserClasses = listOf(
                 "com.instagram.inappbrowser.InAppBrowserActivity",
@@ -23,20 +22,21 @@ object InteractionsHook {
             )
             for (cls in inAppBrowserClasses) {
                 val clazz = XposedHelpers.findClassIfExists(cls, classLoader) ?: continue
-                XposedBridge.hookAllMethods(clazz, "onCreate", object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        if (!XposedInit.getBoolean(null, PrefsManager.KEY_EXTERNAL_BROWSER, false)) return
-                        val activity = param.thisObject as? android.app.Activity ?: return
-                        val intent = activity.intent ?: return
-                        val url = intent.dataString ?: intent.getStringExtra("EXTRA_URL") ?: intent.getStringExtra("url")
-                        if (!url.isNullOrEmpty()) {
-                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                XposedBridge.hookAllMethods(clazz, "onResume", object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        try {
+                            if (!XposedInit.getBoolean(null, PrefsManager.KEY_EXTERNAL_BROWSER, false)) return
+                            val activity = param.thisObject as? android.app.Activity ?: return
+                            val intent = activity.intent ?: return
+                            val url = intent.dataString ?: intent.getStringExtra("EXTRA_URL") ?: intent.getStringExtra("url")
+                            if (!url.isNullOrEmpty()) {
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                activity.startActivity(browserIntent)
+                                activity.finish()
                             }
-                            activity.startActivity(browserIntent)
-                            activity.finish()
-                            param.result = null
-                        }
+                        } catch (_: Throwable) {}
                     }
                 })
             }

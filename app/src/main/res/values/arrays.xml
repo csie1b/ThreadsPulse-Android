@@ -3,6 +3,8 @@
     <!-- Scope for Xposed -->
     <string-array name="xposed_scope">
         <item>com.instagram.barcelona</item>
+        <item>com.instagram.barcelona.pulse</item>
+        <item>com.instagram.barcelonp</item>
     </string-array>
 
     <string-array name="video_quality_entries">

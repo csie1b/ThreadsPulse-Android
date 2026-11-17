@@ -27,9 +27,15 @@ object AnalyticsHook {
                     if (name.contains("log") || name.contains("report") || name.contains("upload")) {
                         XposedBridge.hookMethod(m, object : XC_MethodHook() {
                             override fun beforeHookedMethod(param: MethodHookParam) {
-                                if (XposedInit.getBoolean(null, PrefsManager.KEY_BLOCK_ANALYTICS, false)) {
-                                    param.result = null
-                                }
+                                try {
+                                    if (XposedInit.getBoolean(null, PrefsManager.KEY_BLOCK_ANALYTICS, false)) {
+                                        if (m.returnType == java.lang.Void.TYPE) {
+                                            param.result = null
+                                        } else if (m.returnType == java.lang.Boolean.TYPE) {
+                                            param.result = false
+                                        }
+                                    }
+                                } catch (_: Throwable) {}
                             }
                         })
                     }

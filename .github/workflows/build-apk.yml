@@ -25,6 +25,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Make Gradle Wrapper Executable
         run: chmod +x ./gradlew
 
@@ -51,38 +56,56 @@ jobs:
           curl -sL -o workspace/threads_base.apk "${{ steps.get_url.outputs.url }}"
           ls -lh workspace/threads_base.apk
 
-      - name: Download LSPatch CLI
+      - name: Create Coexistence Clone Base APK
         run: |
-          LSPATCH_JAR="workspace/lspatch.jar"
-          curl -sL -o "$LSPATCH_JAR" "https://github.com/LSPosed/LSPatch/releases/download/v0.5.1/lspatch.jar"
+          python scripts/patch_clone_manifest.py workspace/threads_base.apk workspace/threads_clone_base.apk
+          ls -lh workspace/threads_clone_base.apk
+
+      - name: Download LSPatch CLI & Uber-APK-Signer
+        run: |
+          curl -sL -o workspace/lspatch.jar "https://github.com/LSPosed/LSPatch/releases/download/v0.5.1/lspatch.jar"
+          curl -sL -o workspace/uber-apk-signer.jar "https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar"
           ls -lh workspace/
 
-      - name: Run LSPatch Embedding
+      - name: Run LSPatch on Standard Threads APK
         run: |
           MODULE_APK=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
           echo "Found module APK: $MODULE_APK"
-          java -jar workspace/lspatch.jar workspace/threads_base.apk -m "$MODULE_APK" -l 2 -o workspace/patched/
-          ls -lh workspace/patched/
+          mkdir -p workspace/patched_std
+          java -jar workspace/lspatch.jar workspace/threads_base.apk -m "$MODULE_APK" -l 2 -o workspace/patched_std/
+          ls -lh workspace/patched_std/
 
-      - name: Sign Patched APK with Uber-APK-Signer
+      - name: Run LSPatch on Coexistence Clone Threads APK
         run: |
-          curl -sL -o workspace/uber-apk-signer.jar "https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar"
-          java -jar workspace/uber-apk-signer.jar --apks workspace/patched/ --allowResign --overwrite
+          MODULE_APK=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
+          mkdir -p workspace/patched_clone
+          java -jar workspace/lspatch.jar workspace/threads_clone_base.apk -m "$MODULE_APK" -l 2 -o workspace/patched_clone/
+          ls -lh workspace/patched_clone/
+
+      - name: Sign Patched APKs
+        run: |
+          java -jar workspace/uber-apk-signer.jar --apks workspace/patched_std/ --allowResign --overwrite
+          java -jar workspace/uber-apk-signer.jar --apks workspace/patched_clone/ --allowResign --overwrite
           mkdir -p output
-          cp workspace/patched/*-aligned-debugSigned.apk output/Threads_Pulse_Patched.apk 2>/dev/null || cp workspace/patched/*.apk output/Threads_Pulse_Patched.apk
+          cp workspace/patched_std/*-aligned-debugSigned.apk output/Threads_Pulse_Patched.apk 2>/dev/null || cp workspace/patched_std/*.apk output/Threads_Pulse_Patched.apk
+          cp workspace/patched_clone/*-aligned-debugSigned.apk output/Threads_Pulse_Clone_Coexist.apk 2>/dev/null || cp workspace/patched_clone/*.apk output/Threads_Pulse_Clone_Coexist.apk
+          cp app/build/outputs/apk/release/*.apk output/ThreadsPulse-Release.apk 2>/dev/null || true
           ls -lh output/
 
-      - name: Upload Patched Threads APK Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Threads_Pulse_Patched_APK
-          path: output/Threads_Pulse_Patched.apk
+          name: Threads_Pulse_APKs
+          path: output/*.apk
           if-no-files-found: error
 
-      - name: Attach Patched APK to GitHub Release
+      - name: Attach Patched APKs to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.27.0
-          files: output/Threads_Pulse_Patched.apk
+          files: |
+            output/Threads_Pulse_Patched.apk
+            output/Threads_Pulse_Clone_Coexist.apk
+            output/ThreadsPulse-Release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

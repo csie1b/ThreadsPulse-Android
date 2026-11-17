@@ -27,9 +27,15 @@ object DirectMessageHook {
                     if (name.contains("markasread") || name.contains("sendseen") || name.contains("seenmutation")) {
                         XposedBridge.hookMethod(m, object : XC_MethodHook() {
                             override fun beforeHookedMethod(param: MethodHookParam) {
-                                if (XposedInit.getBoolean(null, PrefsManager.KEY_NO_SEEN, false)) {
-                                    param.result = null
-                                }
+                                try {
+                                    if (XposedInit.getBoolean(null, PrefsManager.KEY_NO_SEEN, false)) {
+                                        if (m.returnType == java.lang.Void.TYPE) {
+                                            param.result = null
+                                        } else if (m.returnType == java.lang.Boolean.TYPE) {
+                                            param.result = false
+                                        }
+                                    }
+                                } catch (_: Throwable) {}
                             }
                         })
                     }
@@ -49,9 +55,15 @@ object DirectMessageHook {
                     if (m.name.lowercase().contains("typing")) {
                         XposedBridge.hookMethod(m, object : XC_MethodHook() {
                             override fun beforeHookedMethod(param: MethodHookParam) {
-                                if (XposedInit.getBoolean(null, PrefsManager.KEY_NO_TYPING, false)) {
-                                    param.result = null
-                                }
+                                try {
+                                    if (XposedInit.getBoolean(null, PrefsManager.KEY_NO_TYPING, false)) {
+                                        if (m.returnType == java.lang.Void.TYPE) {
+                                            param.result = null
+                                        } else if (m.returnType == java.lang.Boolean.TYPE) {
+                                            param.result = false
+                                        }
+                                    }
+                                } catch (_: Throwable) {}
                             }
                         })
                     }
