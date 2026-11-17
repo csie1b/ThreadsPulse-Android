@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       threads_apk_url:
-        description: 'Direct download URL for official Threads APK (or leave blank to use secret THREADS_APK_URL)'
+        description: 'Direct download URL for official Threads APK (leave blank to auto-download official Threads APK)'
         required: false
         default: ''
 
@@ -39,22 +39,22 @@ jobs:
             URL="${{ secrets.THREADS_APK_URL }}"
           fi
           if [ -z "$URL" ]; then
-            echo "::error::No Threads APK URL provided. Please provide an APK URL in the workflow input or set the THREADS_APK_URL repository secret."
-            exit 1
+            echo "No custom Threads APK URL provided. Using official Threads base APK mirror..."
+            URL="https://pool.apk.aptoide.com/gs76/com-instagram-barcelona-512408677-77461354-d18c746fb311e383fa3ee8e380f8611d.apk"
           fi
+          echo "Using APK URL: $URL"
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Download Base Threads APK
         run: |
           mkdir -p workspace
-          curl -L -o workspace/threads_base.apk "${{ steps.get_url.outputs.url }}"
-          file workspace/threads_base.apk
+          curl -sL -o workspace/threads_base.apk "${{ steps.get_url.outputs.url }}"
+          ls -lh workspace/threads_base.apk
 
       - name: Download LSPatch CLI
         run: |
           LSPATCH_JAR="workspace/lspatch.jar"
-          curl -L -o "$LSPATCH_JAR" "https://github.com/JingMatrix/LSPatch/releases/download/v0.6/lspatch.jar" || \
-          curl -L -o "$LSPATCH_JAR" "https://github.com/LSPosed/LSPatch/releases/download/v0.5.1/lspatch.jar"
+          curl -sL -o "$LSPATCH_JAR" "https://github.com/LSPosed/LSPatch/releases/download/v0.5.1/lspatch.jar"
           ls -lh workspace/
 
       - name: Run LSPatch Embedding
@@ -66,10 +66,10 @@ jobs:
 
       - name: Sign Patched APK with Uber-APK-Signer
         run: |
-          curl -L -o workspace/uber-apk-signer.jar https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar
+          curl -sL -o workspace/uber-apk-signer.jar "https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar"
           java -jar workspace/uber-apk-signer.jar --apks workspace/patched/ --allowResign --overwrite
           mkdir -p output
-          cp workspace/patched/*.apk output/Threads_Pulse_Patched.apk
+          cp workspace/patched/*-aligned-debugSigned.apk output/Threads_Pulse_Patched.apk 2>/dev/null || cp workspace/patched/*.apk output/Threads_Pulse_Patched.apk
           ls -lh output/
 
       - name: Upload Patched Threads APK
