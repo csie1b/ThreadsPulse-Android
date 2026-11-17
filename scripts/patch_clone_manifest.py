@@ -1,79 +1,94 @@
 import sys
 import os
-import re
+import struct
 import zipfile
-import io
 
-def patch_manifest_bytes(data: bytes, old_pkg="com.instagram.barcelona", new_pkg="com.instagram.barcelonp") -> bytes:
-    assert len(old_pkg) == len(new_pkg), f"Lengths must match: {len(old_pkg)} != {len(new_pkg)}"
-    
-    # 1. UTF-8 replacement
-    old_u8 = old_pkg.encode("utf-8")
-    new_u8 = new_pkg.encode("utf-8")
-    count_u8 = data.count(old_u8)
-    data = data.replace(old_u8, new_u8)
-    
-    # 2. UTF-16LE replacement
-    old_u16 = old_pkg.encode("utf-16le")
-    new_u16 = new_pkg.encode("utf-16le")
-    count_u16 = data.count(old_u16)
-    data = data.replace(old_u16, new_u16)
-    
-    print(f"[+] Replaced {count_u8} UTF-8 occurrences and {count_u16} UTF-16LE occurrences in binary manifest")
-    return data
+def should_rename_string(s: str) -> bool:
+    if not s.startswith("com.instagram.barcelona"):
+        return False
+    parts = s.split(".")
+    # If any segment after the prefix starts with an uppercase letter followed by lowercase (e.g. BarcelonaAppShell, BarcelonaActivity),
+    # it is a Java Class Name! Never rename class names because the bytecode in classes.dex has not been recompiled.
+    for p in parts[3:]:
+        if p and p[0].isupper() and not p.isupper():
+            return False
+    return True
 
-def patch_apk(input_apk: str, output_apk: str, new_pkg="com.instagram.barcelonp"):
+def patch_manifest_bytes(raw_data: bytes, old_prefix="com.instagram.barcelona", new_prefix="com.instagram.barcelonp") -> bytes:
+    assert len(old_prefix) == len(new_prefix), f"Prefix lengths must match: {len(old_prefix)} != {len(new_prefix)}"
+    data = bytearray(raw_data)
+    
+    if len(data) < 36:
+        print("[!] Warning: Manifest data too short, skipping StringPool patch")
+        return raw_data
+
+    # Parse AXML header
+    res_type, header_size, file_size = struct.unpack("<HHI", data[:8])
+    if res_type != 0x0003:
+        print(f"[!] Warning: Not a valid AXML header (type={res_type:#x})")
+        return raw_data
+
+    sp_type, sp_header_size, sp_chunk_size, string_count, style_count, flags, strings_start, styles_start = struct.unpack("<HHIIIIII", data[8:36])
+    if sp_type != 0x0001:
+        print(f"[!] Warning: StringPool chunk not found at expected offset (type={sp_type:#x})")
+        return raw_data
+
+    is_utf8 = bool(flags & (1 << 8))
+    offset_data = data[36:36 + 4 * string_count]
+    offsets = [struct.unpack("<I", offset_data[i*4:(i+1)*4])[0] for i in range(string_count)]
+    str_base = 8 + strings_start
+
+    renamed_count = 0
+    for idx, off in enumerate(offsets):
+        p = str_base + off
+        if is_utf8:
+            p_cur = p
+            c_len = data[p_cur]
+            p_cur += 1
+            if c_len & 0x80:
+                p_cur += 1
+            b_len = data[p_cur]
+            p_cur += 1
+            if b_len & 0x80:
+                p_cur += 1
+            s_bytes = bytes(data[p_cur:p_cur + b_len])
+            s = s_bytes.decode("utf-8", errors="replace")
+            if should_rename_string(s):
+                new_s = s.replace(old_prefix, new_prefix)
+                new_bytes = new_s.encode("utf-8")
+                if len(new_bytes) == len(s_bytes):
+                    data[p_cur:p_cur + b_len] = new_bytes
+                    print(f"  [+] Renamed StringPool [{idx}]: {s} -> {new_s}")
+                    renamed_count += 1
+        else:
+            # UTF-16LE
+            u_len = struct.unpack("<H", data[p:p+2])[0]
+            s_bytes = bytes(data[p+2:p+2 + u_len*2])
+            s = s_bytes.decode("utf-16le", errors="replace")
+            if should_rename_string(s):
+                new_s = s.replace(old_prefix, new_prefix)
+                new_bytes = new_s.encode("utf-16le")
+                if len(new_bytes) == len(s_bytes):
+                    data[p+2:p+2 + u_len*2] = new_bytes
+                    print(f"  [+] Renamed StringPool UTF-16 [{idx}]: {s} -> {new_s}")
+                    renamed_count += 1
+
+    print(f"[✔] Total StringPool entries renamed: {renamed_count}")
+    return bytes(data)
+
+def patch_apk(input_apk: str, output_apk: str):
     print(f"[*] Patching APK: {input_apk} -> {output_apk}")
     with zipfile.ZipFile(input_apk, "r") as zin, zipfile.ZipFile(output_apk, "w") as zout:
         for item in zin.infolist():
             data = zin.read(item.filename)
             if item.filename == "AndroidManifest.xml":
-                data = patch_manifest_bytes(data, new_pkg=new_pkg)
+                data = patch_manifest_bytes(data)
             zout.writestr(item, data)
     print(f"[✔] Successfully created cloned base APK: {output_apk}")
 
-def patch_decompiled_dir(clone_dir: str):
-    manifest_path = os.path.join(clone_dir, "AndroidManifest.xml")
-    if not os.path.exists(manifest_path):
-        print(f"Error: {manifest_path} not found")
-        sys.exit(1)
-
-    with open(manifest_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    content = content.replace('package="com.instagram.barcelona"', 'package="com.instagram.barcelona.pulse"')
-    content = re.sub(
-        r'android:authorities="com\.instagram\.barcelona([^"]*)"',
-        r'android:authorities="com.instagram.barcelona.pulse\1"',
-        content
-    )
-
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        f.write(content)
-
-    print("[+] Patched plain text AndroidManifest.xml package and authorities")
-
-    yml_path = os.path.join(clone_dir, "apktool.yml")
-    if os.path.exists(yml_path):
-        with open(yml_path, "r", encoding="utf-8") as f:
-            yml = f.read()
-        if "renameManifestPackage:" not in yml:
-            yml += "\nrenameManifestPackage: com.instagram.barcelona.pulse\n"
-            with open(yml_path, "w", encoding="utf-8") as f:
-                f.write(yml)
-            print("[+] Updated apktool.yml renameManifestPackage")
-
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print("  python patch_clone_manifest.py <input.apk> <output.apk>")
-        print("  python patch_clone_manifest.py <decompiled_dir>")
+    if len(sys.argv) < 3:
+        print("Usage: python patch_clone_manifest.py <input.apk> <output.apk>")
         sys.exit(1)
 
-    target = sys.argv[1]
-    if target.endswith(".apk") and len(sys.argv) >= 3:
-        patch_apk(target, sys.argv[2])
-    elif os.path.isdir(target):
-        patch_decompiled_dir(target)
-    else:
-        print(f"Unknown target: {target}")
+    patch_apk(sys.argv[1], sys.argv[2])
