@@ -145,6 +145,43 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
         log("Found Threads target package: ${lpparam.packageName} (process: ${lpparam.processName})")
 
+        // Map cloned component class lookups (e.g. BarcelonaLiteContentProvider) to real bytecode class names
+        val factoryClasses = listOf(
+            "com.instagram.barcelona.app.appcomponentfactory.BarcelonaAppComponentFactory",
+            "android.app.AppComponentFactory"
+        )
+        for (fcName in factoryClasses) {
+            try {
+                val fc = XposedHelpers.findClassIfExists(fcName, lpparam.classLoader) ?: continue
+                for (methodName in listOf("instantiateProvider", "instantiateApplication", "instantiateActivity", "instantiateService", "instantiateReceiver")) {
+                    XposedBridge.hookAllMethods(fc, methodName, object : XC_MethodHook() {
+                        override fun beforeHookedMethod(param: MethodHookParam) {
+                            val name = param.args.getOrNull(1) as? String ?: return
+                            if (name.startsWith("com.instagram.barcelonp.")) {
+                                param.args[1] = "com.instagram.barcelona." + name.substring(24)
+                            } else if (name.startsWith("com.instagram.barcelona.pulse.")) {
+                                param.args[1] = "com.instagram.barcelona." + name.substring(30)
+                            }
+                        }
+                    })
+                }
+            } catch (_: Throwable) {}
+        }
+
+        // Map cloned ClassLoader.loadClass calls back to real bytecode class name
+        try {
+            XposedBridge.hookAllMethods(ClassLoader::class.java, "loadClass", object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val name = param.args.firstOrNull() as? String ?: return
+                    if (name.startsWith("com.instagram.barcelonp.")) {
+                        param.args[0] = "com.instagram.barcelona." + name.substring(24)
+                    } else if (name.startsWith("com.instagram.barcelona.pulse.")) {
+                        param.args[0] = "com.instagram.barcelona." + name.substring(30)
+                    }
+                }
+            })
+        } catch (_: Throwable) {}
+
         // Wait for BarcelonaAppShell / Application.onCreate so dextricks has mounted all secondary DEXes
         try {
             val shellClass = XposedHelpers.findClassIfExists("com.instagram.barcelona.app.BarcelonaAppShell", lpparam.classLoader)
