@@ -94,6 +94,32 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             } catch (_: Throwable) {}
         }
 
+        private fun installSafetyNet() {
+            try {
+                val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+                Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+                    var current: Throwable? = throwable
+                    var isSafeToIgnore = false
+                    while (current != null) {
+                        val msg = current.message.orEmpty()
+                        if (msg.contains("INVOKE_RETURN") ||
+                            msg.contains("PostLiveMetrics") ||
+                            current.stackTrace.any { it.className.contains("PostLiveMetrics") }
+                        ) {
+                            isSafeToIgnore = true
+                            break
+                        }
+                        current = current.cause
+                    }
+                    if (isSafeToIgnore) {
+                        log("Silently suppressed non-fatal livemetrics crash on thread ${thread.name}")
+                    } else {
+                        defaultHandler?.uncaughtException(thread, throwable)
+                    }
+                }
+            } catch (_: Throwable) {}
+        }
+
         @Synchronized
         fun initOnce(lpparam: LoadPackageParam, context: Context?) {
             if (hooksInitialized) return
@@ -102,6 +128,61 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 appContext = context.applicationContext ?: context
             }
             log("Threads application initialized. Registering hooks for process ${lpparam.processName}...")
+
+            // Safety net against non-fatal background coroutine NPEs
+            installSafetyNet()
+
+            // Suppress background LiveMetrics GraphQL parsing error
+            try {
+                val coroutineClass = XposedHelpers.findClassIfExists(
+                    "com.instagram.barcelona.livemetrics.PostLiveMetricsRepository\$fetchMediaUpdates\$result\$1",
+                    lpparam.classLoader
+                )
+                if (coroutineClass != null) {
+                    XposedBridge.hookAllMethods(coroutineClass, "invokeSuspend", object : XC_MethodHook() {
+                        override fun afterHookedMethod(param: MethodHookParam) {
+                            if (param.hasThrowable()) {
+                                log("Suppressed PostLiveMetrics coroutine error: ${param.throwable.message}")
+                                param.result = kotlin.Unit
+                            }
+                        }
+                    })
+                }
+            } catch (_: Throwable) {}
+
+            try {
+                val repoClass = XposedHelpers.findClassIfExists(
+                    "com.instagram.barcelona.livemetrics.PostLiveMetricsRepository",
+                    lpparam.classLoader
+                )
+                if (repoClass != null) {
+                    for (m in repoClass.declaredMethods) {
+                        XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                            override fun afterHookedMethod(param: MethodHookParam) {
+                                if (param.hasThrowable()) {
+                                    log("Suppressed PostLiveMetricsRepository.${m.name} error")
+                                    param.result = null
+                                }
+                            }
+                        })
+                    }
+                }
+            } catch (_: Throwable) {}
+
+            try {
+                val r3Class = XposedHelpers.findClassIfExists("X.3rr", lpparam.classLoader)
+                if (r3Class != null) {
+                    for (methodName in listOf("A02", "Cg6")) {
+                        XposedBridge.hookAllMethods(r3Class, methodName, object : XC_MethodHook() {
+                            override fun afterHookedMethod(param: MethodHookParam) {
+                                if (param.hasThrowable()) {
+                                    param.result = null
+                                }
+                            }
+                        })
+                    }
+                }
+            } catch (_: Throwable) {}
 
             // Initialize hook groups safely
             try { AdsHook.init(lpparam) } catch (e: Throwable) { log("AdsHook error: ${e.message}") }
@@ -144,6 +225,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
 
         log("Found Threads target package: ${lpparam.packageName} (process: ${lpparam.processName})")
+
+        // Install early safety net against background coroutine crashes
+        installSafetyNet()
 
         // Map cloned component class lookups (e.g. BarcelonaLiteContentProvider) to real bytecode class names
         val factoryClasses = listOf(
