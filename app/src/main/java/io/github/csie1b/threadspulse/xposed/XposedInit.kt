@@ -1,8 +1,8 @@
 package io.github.csie1b.threadspulse.xposed
 
+import android.app.Activity
+import android.app.Application
 import android.content.Context
-import android.content.ContextWrapper
-import android.os.Bundle
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
@@ -22,18 +22,29 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         const val CLONE_PACKAGE_ALT = "com.instagram.barcelonp"
         const val MODULE_PACKAGE = "io.github.csie1b.threadspulse"
         private var xPrefs: XSharedPreferences? = null
+        @Volatile private var appContext: Context? = null
+        @Volatile private var hooksInitialized = false
 
         fun isModuleActive(): Boolean = true
 
         fun getBoolean(context: Context?, key: String, def: Boolean): Boolean {
+            val ctx = context ?: appContext
+            if (ctx != null) {
+                try {
+                    val sp = ctx.getSharedPreferences(PrefsManager.PREFS_NAME, Context.MODE_PRIVATE)
+                    if (sp.contains(key)) {
+                        return sp.getBoolean(key, def)
+                    }
+                } catch (_: Throwable) {}
+            }
             try {
                 xPrefs?.let {
                     if (it.hasFileChanged()) it.reload()
                     return it.getBoolean(key, def)
                 }
 
-                context?.let { ctx ->
-                    val bundle = ctx.contentResolver.call(
+                ctx?.let { c ->
+                    val bundle = c.contentResolver.call(
                         PrefsContentProvider.CONTENT_URI,
                         PrefsContentProvider.METHOD_GET_PREFS,
                         null,
@@ -48,13 +59,22 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
 
         fun getString(context: Context?, key: String, def: String): String {
+            val ctx = context ?: appContext
+            if (ctx != null) {
+                try {
+                    val sp = ctx.getSharedPreferences(PrefsManager.PREFS_NAME, Context.MODE_PRIVATE)
+                    if (sp.contains(key)) {
+                        return sp.getString(key, def) ?: def
+                    }
+                } catch (_: Throwable) {}
+            }
             try {
                 xPrefs?.let {
                     if (it.hasFileChanged()) it.reload()
                     return it.getString(key, def) ?: def
                 }
-                context?.let { ctx ->
-                    val bundle = ctx.contentResolver.call(
+                ctx?.let { c ->
+                    val bundle = c.contentResolver.call(
                         PrefsContentProvider.CONTENT_URI,
                         PrefsContentProvider.METHOD_GET_PREFS,
                         null,
@@ -72,6 +92,28 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             try {
                 XposedBridge.log("[ThreadsPulse] $msg")
             } catch (_: Throwable) {}
+        }
+
+        @Synchronized
+        fun initOnce(lpparam: LoadPackageParam, context: Context?) {
+            if (hooksInitialized) return
+            hooksInitialized = true
+            if (context != null) {
+                appContext = context.applicationContext ?: context
+            }
+            log("Threads application initialized. Registering hooks for process ${lpparam.processName}...")
+
+            // Initialize hook groups safely
+            try { AdsHook.init(lpparam) } catch (e: Throwable) { log("AdsHook error: ${e.message}") }
+            try { UrlCleanerHook.init(lpparam) } catch (e: Throwable) { log("UrlCleanerHook error: ${e.message}") }
+            try { ScreenshotHook.init(lpparam) } catch (e: Throwable) { log("ScreenshotHook error: ${e.message}") }
+            try { AnalyticsHook.init(lpparam) } catch (e: Throwable) { log("AnalyticsHook error: ${e.message}") }
+            try { MediaDownloadHook.init(lpparam) } catch (e: Throwable) { log("MediaDownloadHook error: ${e.message}") }
+            try { VideoPlayerHook.init(lpparam) } catch (e: Throwable) { log("VideoPlayerHook error: ${e.message}") }
+            try { FeedNavigationHook.init(lpparam) } catch (e: Throwable) { log("FeedNavigationHook error: ${e.message}") }
+            try { DirectMessageHook.init(lpparam) } catch (e: Throwable) { log("DirectMessageHook error: ${e.message}") }
+            try { InteractionsHook.init(lpparam) } catch (e: Throwable) { log("InteractionsHook error: ${e.message}") }
+            try { SettingsHook.init(lpparam) } catch (e: Throwable) { log("SettingsHook error: ${e.message}") }
         }
     }
 
@@ -96,54 +138,45 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         val isTarget = targetPackages.contains(lpparam.packageName) || lpparam.packageName.startsWith("com.instagram.barcelon")
         if (!isTarget) return
 
-        log("Hooking Threads: ${lpparam.packageName} (process: ${lpparam.processName})")
-
-        // Map cloned activity / service class lookups back to real bytecode class name
-        try {
-            XposedBridge.hookAllMethods(ClassLoader::class.java, "loadClass", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val name = param.args.firstOrNull() as? String ?: return
-                    if (name.startsWith("com.instagram.barcelonp.")) {
-                        param.args[0] = name.replace("com.instagram.barcelonp.", "com.instagram.barcelona.")
-                    } else if (name.startsWith("com.instagram.barcelona.pulse.")) {
-                        param.args[0] = name.replace("com.instagram.barcelona.pulse.", "com.instagram.barcelona.")
-                    }
-                }
-            })
-        } catch (_: Throwable) {}
-
-        // In clone mode, spoof getPackageName back to official package name for internal Meta checks
-        if (lpparam.packageName != TARGET_PACKAGE) {
-            try {
-                val ctxWrapper = XposedHelpers.findClassIfExists("android.content.ContextWrapper", lpparam.classLoader)
-                if (ctxWrapper != null) {
-                    XposedBridge.hookAllMethods(ctxWrapper, "getPackageName", object : XC_MethodHook() {
-                        override fun afterHookedMethod(param: MethodHookParam) {
-                            val res = param.result as? String ?: return
-                            if (res == CLONE_PACKAGE || res == CLONE_PACKAGE_ALT || res.startsWith("com.instagram.barcelon")) {
-                                param.result = TARGET_PACKAGE
-                            }
-                        }
-                    })
-                }
-            } catch (_: Throwable) {}
-        }
-
         // Avoid running UI hooks in background daemon processes (e.g. :mqtt, :videoplayer)
         if (lpparam.processName.contains(":")) {
             return
         }
 
-        // Initialize hook groups safely
-        try { AdsHook.init(lpparam) } catch (e: Throwable) { log("AdsHook error: ${e.message}") }
-        try { UrlCleanerHook.init(lpparam) } catch (e: Throwable) { log("UrlCleanerHook error: ${e.message}") }
-        try { ScreenshotHook.init(lpparam) } catch (e: Throwable) { log("ScreenshotHook error: ${e.message}") }
-        try { AnalyticsHook.init(lpparam) } catch (e: Throwable) { log("AnalyticsHook error: ${e.message}") }
-        try { MediaDownloadHook.init(lpparam) } catch (e: Throwable) { log("MediaDownloadHook error: ${e.message}") }
-        try { VideoPlayerHook.init(lpparam) } catch (e: Throwable) { log("VideoPlayerHook error: ${e.message}") }
-        try { FeedNavigationHook.init(lpparam) } catch (e: Throwable) { log("FeedNavigationHook error: ${e.message}") }
-        try { DirectMessageHook.init(lpparam) } catch (e: Throwable) { log("DirectMessageHook error: ${e.message}") }
-        try { InteractionsHook.init(lpparam) } catch (e: Throwable) { log("InteractionsHook error: ${e.message}") }
-        try { SettingsHook.init(lpparam) } catch (e: Throwable) { log("SettingsHook error: ${e.message}") }
+        log("Found Threads target package: ${lpparam.packageName} (process: ${lpparam.processName})")
+
+        // Wait for BarcelonaAppShell / Application.onCreate so dextricks has mounted all secondary DEXes
+        try {
+            val shellClass = XposedHelpers.findClassIfExists("com.instagram.barcelona.app.BarcelonaAppShell", lpparam.classLoader)
+            if (shellClass != null) {
+                XposedBridge.hookAllMethods(shellClass, "onCreate", object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        initOnce(lpparam, param.thisObject as? Context)
+                    }
+                })
+            }
+        } catch (_: Throwable) {}
+
+        try {
+            val appClass = XposedHelpers.findClassIfExists("android.app.Application", lpparam.classLoader)
+            if (appClass != null) {
+                XposedBridge.hookAllMethods(appClass, "onCreate", object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        initOnce(lpparam, param.thisObject as? Context)
+                    }
+                })
+            }
+        } catch (_: Throwable) {}
+
+        try {
+            val actClass = XposedHelpers.findClassIfExists("android.app.Activity", lpparam.classLoader)
+            if (actClass != null) {
+                XposedBridge.hookAllMethods(actClass, "onCreate", object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        initOnce(lpparam, param.thisObject as? Context)
+                    }
+                })
+            }
+        } catch (_: Throwable) {}
     }
 }
