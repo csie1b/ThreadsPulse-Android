@@ -18,6 +18,30 @@ def verify_apk(apk_path: str):
     pos = 0
     checked = 0
     errors = 0
+
+    # 1. Verify root DEX files and BarcelonaAppShell existence
+    dex_count = 0
+    has_app_shell = False
+    with zipfile.ZipFile(apk_path, "r") as z:
+        for name in z.namelist():
+            if name.startswith("classes") and name.endswith(".dex"):
+                dex_count += 1
+                content = z.read(name)
+                if b"BarcelonaAppShell" in content:
+                    has_app_shell = True
+                    print(f"  [✔] Found BarcelonaAppShell inside root DEX: {name}")
+
+    print(f"  Total root DEX files: {dex_count}")
+    if dex_count == 0:
+        print("  [!] ERROR: No root classes.dex found!")
+        errors += 1
+    if not has_app_shell:
+        print("  [!] ERROR: BarcelonaAppShell is missing from root DEX files!")
+        errors += 1
+    else:
+        print("  [✔] Multidex & BarcelonaAppShell verification passed.")
+
+    # 2. Verify 4K page-alignment for uncompressed .so libraries
     while pos < len(cd_data):
         if cd_data[pos:pos+4] != b"\x50\x4b\x01\x02":
             break
@@ -32,22 +56,19 @@ def verify_apk(apk_path: str):
             loc_fn_len, loc_extra_len = struct.unpack("<HH", data[local_offset+26:local_offset+30])
             data_offset = local_offset + 30 + loc_fn_len + loc_extra_len
             mod_4k = data_offset % 4096
-            print(f"  Entry: {fn}")
-            print(f"    comp_method={comp_method} (0=stored), data_offset={data_offset}, mod_4k={mod_4k}")
             if comp_method == 0 and mod_4k != 0:
-                print(f"    [!] ERROR: Uncompressed file {fn} is NOT 4K page-aligned!")
+                print(f"  [!] ERROR: Uncompressed file {fn} is NOT 4K page-aligned! (offset={data_offset}, mod_4k={mod_4k})")
                 errors += 1
             else:
-                print(f"    [✔] OK")
-            checked += 1
+                checked += 1
 
         pos += 46 + fn_len + extra_len + comment_len
 
     if errors > 0:
-        print(f"[✘] Verification FAILED with {errors} alignment errors!")
+        print(f"[✘] Verification FAILED with {errors} errors!")
         sys.exit(1)
     else:
-        print(f"[✔] Verification PASSED ({checked} critical entries checked).")
+        print(f"[✔] Verification PASSED ({checked} native libraries checked, {dex_count} DEX files verified).")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

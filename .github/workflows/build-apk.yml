@@ -63,7 +63,7 @@ jobs:
 
       - name: Download LSPatch CLI
         run: |
-          curl -sL -o workspace/lspatch.jar "https://github.com/LSPosed/LSPatch/releases/download/v0.5.1/lspatch.jar"
+          curl -sL -o workspace/lspatch.jar "https://github.com/JingMatrix/LSPatch/releases/download/v1.2/lspatch-v1.2-487-release.jar"
           ls -lh workspace/
 
       - name: Run LSPatch on Standard Threads APK
@@ -71,14 +71,14 @@ jobs:
           MODULE_APK=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
           echo "Found module APK: $MODULE_APK"
           mkdir -p workspace/patched_std
-          java -jar workspace/lspatch.jar workspace/threads_base.apk -m "$MODULE_APK" -k keystore/release.jks threadspulse threadspulse threadspulse -l 2 -o workspace/patched_std/
+          java -jar workspace/lspatch.jar workspace/threads_base.apk -m "$MODULE_APK" -k keystore/release.jks threadspulse threadspulse threadspulse -l 2 --injectdex -o workspace/patched_std/
           ls -lh workspace/patched_std/
 
       - name: Run LSPatch on Coexistence Clone Threads APK
         run: |
           MODULE_APK=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
           mkdir -p workspace/patched_clone
-          java -jar workspace/lspatch.jar workspace/threads_clone_base.apk -m "$MODULE_APK" -k keystore/release.jks threadspulse threadspulse threadspulse -l 2 -o workspace/patched_clone/
+          java -jar workspace/lspatch.jar workspace/threads_clone_base.apk -m "$MODULE_APK" -k keystore/release.jks threadspulse threadspulse threadspulse -l 2 --injectdex -o workspace/patched_clone/
           ls -lh workspace/patched_clone/
 
       - name: Prepare Final Output APKs & Verify Alignment

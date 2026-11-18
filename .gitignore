@@ -11,3 +11,6 @@ local.properties
 app/build/
 output/
 workspace/
+*.jar
+*.dex
+__pycache__/
