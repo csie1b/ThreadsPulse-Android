@@ -94,29 +94,57 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             } catch (_: Throwable) {}
         }
 
+        private fun isSafeToIgnore(throwable: Throwable?): Boolean {
+            var current: Throwable? = throwable
+            while (current != null) {
+                val msg = current.message.orEmpty()
+                if (msg.contains("INVOKE_RETURN") ||
+                    msg.contains("PostLiveMetrics") ||
+                    msg.contains("AlM") ||
+                    msg.contains("cannot be cast to") ||
+                    current.stackTrace.any {
+                        it.className.contains("PostLiveMetrics") ||
+                        it.className.contains("livemetrics") ||
+                        (it.className.contains("6zJ") && it.methodName == "invokeSuspend")
+                    }
+                ) {
+                    return true
+                }
+                current = current.cause
+            }
+            return false
+        }
+
         private fun installSafetyNet() {
             try {
                 val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
                 Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-                    var current: Throwable? = throwable
-                    var isSafeToIgnore = false
-                    while (current != null) {
-                        val msg = current.message.orEmpty()
-                        if (msg.contains("INVOKE_RETURN") ||
-                            msg.contains("PostLiveMetrics") ||
-                            current.stackTrace.any { it.className.contains("PostLiveMetrics") }
-                        ) {
-                            isSafeToIgnore = true
-                            break
-                        }
-                        current = current.cause
-                    }
-                    if (isSafeToIgnore) {
-                        log("Silently suppressed non-fatal livemetrics crash on thread ${thread.name}")
+                    if (isSafeToIgnore(throwable)) {
+                        log("Silently suppressed non-fatal crash on thread ${thread.name}: ${throwable.javaClass.name}: ${throwable.message}")
                     } else {
                         defaultHandler?.uncaughtException(thread, throwable)
                     }
                 }
+            } catch (_: Throwable) {}
+
+            try {
+                XposedHelpers.findAndHookMethod(
+                    Thread::class.java,
+                    "setDefaultUncaughtExceptionHandler",
+                    Thread.UncaughtExceptionHandler::class.java,
+                    object : XC_MethodHook() {
+                        override fun beforeHookedMethod(param: MethodHookParam) {
+                            val originalHandler = param.args[0] as? Thread.UncaughtExceptionHandler ?: return
+                            param.args[0] = Thread.UncaughtExceptionHandler { thread, throwable ->
+                                if (isSafeToIgnore(throwable)) {
+                                    log("Silently intercepted crash on thread ${thread.name}: ${throwable.javaClass.name}: ${throwable.message}")
+                                } else {
+                                    originalHandler.uncaughtException(thread, throwable)
+                                }
+                            }
+                        }
+                    }
+                )
             } catch (_: Throwable) {}
         }
 
@@ -132,51 +160,60 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             // Safety net against non-fatal background coroutine NPEs
             installSafetyNet()
 
-            // Suppress background LiveMetrics GraphQL parsing error
-            try {
-                val coroutineClass = XposedHelpers.findClassIfExists(
-                    "com.instagram.barcelona.livemetrics.PostLiveMetricsRepository\$fetchMediaUpdates\$result\$1",
-                    lpparam.classLoader
-                )
-                if (coroutineClass != null) {
-                    XposedBridge.hookAllMethods(coroutineClass, "invokeSuspend", object : XC_MethodHook() {
-                        override fun afterHookedMethod(param: MethodHookParam) {
-                            if (param.hasThrowable()) {
-                                log("Suppressed PostLiveMetrics coroutine error: ${param.throwable.message}")
-                                param.result = kotlin.Unit
-                            }
-                        }
-                    })
-                }
-            } catch (_: Throwable) {}
-
+            // Handle PostLiveMetricsRepository cleanly:
+            // Live metrics queries in cloned app fail GraphQL parsing because of missing metrics.
+            // X.9zC.A00 is Meta's own empty singleton model implementing X.AlM.
+            // Returning it from A00 avoids both the INVOKE_RETURN NPE and any coroutine ClassCastException.
             try {
                 val repoClass = XposedHelpers.findClassIfExists(
                     "com.instagram.barcelona.livemetrics.PostLiveMetricsRepository",
                     lpparam.classLoader
                 )
                 if (repoClass != null) {
+                    var cachedEmptyLiveMetrics: Any? = null
+                    val emptyClass = XposedHelpers.findClassIfExists("X.9zC", lpparam.classLoader)
+                        ?: XposedHelpers.findClassIfExists("X.C9zC", lpparam.classLoader)
+                    if (emptyClass != null) {
+                        try {
+                            cachedEmptyLiveMetrics = XposedHelpers.getStaticObjectField(emptyClass, "A00")
+                                ?: emptyClass.getDeclaredConstructor().newInstance()
+                        } catch (_: Throwable) {}
+                    }
+
                     for (m in repoClass.declaredMethods) {
-                        XposedBridge.hookMethod(m, object : XC_MethodHook() {
-                            override fun afterHookedMethod(param: MethodHookParam) {
-                                if (param.hasThrowable()) {
-                                    log("Suppressed PostLiveMetricsRepository.${m.name} error")
-                                    param.result = null
+                        if (m.name == "A00") {
+                            XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                                override fun beforeHookedMethod(param: MethodHookParam) {
+                                    if (cachedEmptyLiveMetrics == null) {
+                                        try {
+                                            val cls = XposedHelpers.findClassIfExists("X.9zC", param.thisObject.javaClass.classLoader)
+                                                ?: XposedHelpers.findClassIfExists("X.C9zC", param.thisObject.javaClass.classLoader)
+                                            if (cls != null) {
+                                                cachedEmptyLiveMetrics = XposedHelpers.getStaticObjectField(cls, "A00")
+                                                    ?: cls.getDeclaredConstructor().newInstance()
+                                            }
+                                        } catch (_: Throwable) {}
+                                    }
+                                    if (cachedEmptyLiveMetrics != null) {
+                                        param.result = cachedEmptyLiveMetrics
+                                    }
                                 }
-                            }
-                        })
+                            })
+                        }
                     }
                 }
-            } catch (_: Throwable) {}
+            } catch (e: Throwable) {
+                log("Error hooking PostLiveMetricsRepository: ${e.message}")
+            }
 
             try {
                 val r3Class = XposedHelpers.findClassIfExists("X.3rr", lpparam.classLoader)
                 if (r3Class != null) {
-                    for (methodName in listOf("A02", "Cg6")) {
+                    for (methodName in listOf("A02", "Cg6", "Cg7")) {
                         XposedBridge.hookAllMethods(r3Class, methodName, object : XC_MethodHook() {
                             override fun afterHookedMethod(param: MethodHookParam) {
                                 if (param.hasThrowable()) {
-                                    param.result = null
+                                    param.result = param.thisObject
                                 }
                             }
                         })
